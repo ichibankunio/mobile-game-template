@@ -23,6 +23,16 @@ go run .
 go build ./...
 ```
 
+## Bootstrap After Creating From Template
+
+Run once after creating a new repository from this template:
+
+```bash
+./scripts/bootstrap_template.sh --owner <github-owner> --repo <new-repo>
+```
+
+This updates module/import paths, visible app/repo name strings, and launchd plist naming.
+
 ## WASM (GitHub Pages)
 
 ```bash
@@ -39,6 +49,35 @@ make serve
   - push to `main` -> build WASM -> deploy GitHub Pages
 - `.github/workflows/pr-preview.yml`:
   - PR open/update -> deploy Pages preview -> comment preview URL to PR
+
+## New Repo Checklist
+
+After creating a new repo from this template, run the following:
+
+1. Run bootstrap:
+```bash
+./scripts/bootstrap_template.sh --owner <github-owner> --repo <new-repo>
+```
+2. Validate and commit:
+```bash
+go test ./...
+make wasm
+git add -A
+git commit -m "Bootstrap from template"
+```
+3. GitHub `Settings > Pages`:
+   - set `Build and deployment` to `GitHub Actions`
+4. GitHub `Settings > Actions > General`:
+   - set `Workflow permissions` to `Read and write`
+5. If using PR preview deploys:
+   - check `Settings > Environments > github-pages` branch restriction rules
+6. (Recommended) Branch protection for `main`:
+   - require PR before merge
+   - require required status checks
+7. On worker machine:
+   - `gh auth login`
+   - `codex login`
+   - start workers with `./scripts/start_workers.sh`
 
 ## Local Codex Worker (Issue -> PR)
 
