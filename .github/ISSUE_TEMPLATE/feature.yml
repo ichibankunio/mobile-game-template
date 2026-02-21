@@ -3,6 +3,7 @@ description: Add or change gameplay behavior
 title: "[Feature] "
 labels:
   - feature
+  - autocodex
 body:
   - type: textarea
     id: request
