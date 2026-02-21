@@ -58,7 +58,13 @@ replace_literal() {
   local old="$1"
   local new="$2"
   shift 2
-  perl -i -pe "s/\Q${old}\E/${new}/g" "$@"
+  OLD_LITERAL="${old}" NEW_LITERAL="${new}" perl -i -pe '
+    BEGIN {
+      $old = $ENV{"OLD_LITERAL"};
+      $new = $ENV{"NEW_LITERAL"};
+    }
+    s/\Q$old\E/$new/g;
+  ' "$@"
 }
 
 echo "bootstrapping template..."
