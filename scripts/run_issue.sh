@@ -64,12 +64,22 @@ ${RAW_BODY}
 Requirements:
 - Implement only what is necessary to satisfy this issue.
 - Do not commit or push directly.
+- Do not checkout or switch to another branch. Stay on ${BRANCH}.
 - Run relevant checks (at minimum: go test ./... and make wasm if applicable).
 - Keep changes small and reviewable.
 - Update docs if behavior or usage changed.
 EOF
 
 codex exec --full-auto -C "$(pwd)" - < "${PROMPT_FILE}"
+
+# Guard: ensure commit always happens on the issue branch.
+if [[ "$(git branch --show-current)" != "${BRANCH}" ]]; then
+  if git show-ref --verify --quiet "refs/heads/${BRANCH}"; then
+    git checkout "${BRANCH}"
+  else
+    git checkout -b "${BRANCH}" "origin/${BRANCH}" 2>/dev/null || git checkout -B "${BRANCH}"
+  fi
+fi
 
 if [[ -z "$(git status --porcelain)" ]]; then
   gh issue comment "${ISSUE_NUMBER}" --repo "${REPO}" --body "Codex ran for this issue but produced no file changes."
