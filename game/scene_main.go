@@ -38,7 +38,7 @@ func (s *MainScene) Update(_ *flib.Game) error {
 }
 
 func (s *MainScene) Draw(screen *ebiten.Image) {
-	screen.Fill(color.RGBA{18, 25, 40, 255})
+	screen.Fill(color.RGBA{0, 0, 0, 255})
 
 	if img := GetImage("zentablue.png"); img != nil {
 		op := &ebiten.DrawImageOptions{}
