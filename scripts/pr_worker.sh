@@ -79,6 +79,7 @@ Mode: ${mode}
 Instructions:
 - If mode is "reply-only", do not modify files; provide a concise reviewer response.
 - If mode is "apply", implement the requested change if needed, run relevant checks, and summarize what changed.
+- If mode is "apply", do not checkout or switch to any branch other than ${head_branch}.
 - Keep the response concise and specific to the comment.
 EOF
 
@@ -106,6 +107,14 @@ EOF
 
   local commit_note=""
   if [[ "${mode}" == "apply" ]] && [[ -n "$(git status --porcelain)" ]]; then
+    # Guard: ensure commits always go to the PR head branch.
+    if [[ "$(git branch --show-current)" != "${head_branch}" ]]; then
+      if git show-ref --verify --quiet "refs/heads/${head_branch}"; then
+        git checkout "${head_branch}"
+      else
+        git checkout -b "${head_branch}" "origin/${head_branch}" 2>/dev/null || git checkout -B "${head_branch}"
+      fi
+    fi
     git add -A
     git commit -m "fix: address PR #${pr_number} comment #${comment_id}"
     git push origin "${head_branch}"
