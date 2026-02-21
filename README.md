@@ -6,6 +6,7 @@
 
 - 画像ロード: `game/assets/images`
 - フォントロード: `game/assets/fonts`
+- `text/v2` の `GoTextFace` で `Hello World` 表示
 - SE/BGMロード: `game/assets/se`, `game/assets/bgm`
 - JSONロード: `game/assets/data`
 
