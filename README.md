@@ -79,6 +79,8 @@ POLL_INTERVAL=60 TRIGGER_PREFIX=@codex ./scripts/pr_worker.sh
 - Reacts only to comments starting with `@codex`.
 - `@codex reply ...` -> reply only, no code changes.
 - `@codex ...` -> may edit PR branch, commit, push, and comment back.
+- `issue_worker` posts an initial Codex response to each created PR.
+- If initial response contains `QUESTION_FOR_REVIEWER: ...`, answer in PR with `@codex ...` and `pr_worker` continues from there.
 
 ### Start both workers together
 

@@ -25,6 +25,7 @@ BASE_BRANCH="${BASE_BRANCH:-main}"
 BRANCH="codex/issue-${ISSUE_NUMBER}"
 TMP_DIR="$(mktemp -d)"
 PROMPT_FILE="${TMP_DIR}/prompt.txt"
+RESPONSE_FILE="${TMP_DIR}/response.txt"
 
 cleanup() {
   rm -rf "${TMP_DIR}"
@@ -68,9 +69,12 @@ Requirements:
 - Run relevant checks (at minimum: go test ./... and make wasm if applicable).
 - Keep changes small and reviewable.
 - Update docs if behavior or usage changed.
+- In your final response, include a concise implementation summary for the PR comment.
+- If you need reviewer input before further changes, add a line:
+  QUESTION_FOR_REVIEWER: <your question>
 EOF
 
-codex exec --full-auto -C "$(pwd)" - < "${PROMPT_FILE}"
+codex exec --full-auto -C "$(pwd)" -o "${RESPONSE_FILE}" - < "${PROMPT_FILE}"
 
 # Guard: ensure commit always happens on the issue branch.
 if [[ "$(git branch --show-current)" != "${BRANCH}" ]]; then
@@ -108,6 +112,17 @@ PR_URL="$(gh pr create \
   --head "${BRANCH}" \
   --title "${PR_TITLE}" \
   --body "${PR_BODY}")"
+
+PR_NUMBER="$(printf '%s\n' "${PR_URL}" | sed -E 's#.*/pull/([0-9]+).*#\1#')"
+RESPONSE_TEXT="$(cat "${RESPONSE_FILE}")"
+if [[ -n "${RESPONSE_TEXT}" ]]; then
+  gh pr comment "${PR_NUMBER}" --repo "${REPO}" --body $'Codex initial response:\n\n'"${RESPONSE_TEXT}"
+fi
+
+QUESTION_TEXT="$(sed -n 's/^QUESTION_FOR_REVIEWER:[[:space:]]*//p' "${RESPONSE_FILE}" | head -n 1)"
+if [[ -n "${QUESTION_TEXT}" ]]; then
+  gh pr comment "${PR_NUMBER}" --repo "${REPO}" --body $'Codex question for reviewer:\n\n'"${QUESTION_TEXT}"$'\n\nPlease answer in this PR with `@codex ...`.'
+fi
 
 gh issue comment "${ISSUE_NUMBER}" --repo "${REPO}" --body "Codex started and opened a PR: ${PR_URL}"
 echo "created PR: ${PR_URL}"
