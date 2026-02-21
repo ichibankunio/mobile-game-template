@@ -80,6 +80,10 @@ Instructions:
 - If mode is "reply-only", do not modify files; provide a concise reviewer response.
 - If mode is "apply", implement the requested change if needed, run relevant checks, and summarize what changed.
 - If mode is "apply", do not checkout or switch to any branch other than ${head_branch}.
+- Never modify any file or directory outside this repository.
+- Only modify files under: game/, mobile/, web/, docs/
+- Additionally, only these root files may be modified: go.mod, go.sum, main.go, README.md, .gitignore
+- Do not modify any other paths/files.
 - Keep the response concise and specific to the comment.
 EOF
 

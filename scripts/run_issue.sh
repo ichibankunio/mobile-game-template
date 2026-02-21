@@ -66,6 +66,10 @@ Requirements:
 - Implement only what is necessary to satisfy this issue.
 - Do not commit or push directly.
 - Do not checkout or switch to another branch. Stay on ${BRANCH}.
+- Never modify any file or directory outside this repository.
+- Only modify files under: game/, mobile/, web/, docs/
+- Additionally, only these root files may be modified: go.mod, go.sum, main.go, README.md, .gitignore
+- Do not modify any other paths/files.
 - Run relevant checks (at minimum: go test ./... and make wasm if applicable).
 - Keep changes small and reviewable.
 - Update docs if behavior or usage changed.
