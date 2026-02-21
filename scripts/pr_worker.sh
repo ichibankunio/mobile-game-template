@@ -84,6 +84,8 @@ Instructions:
 - Only modify files under: game/, mobile/, web/, docs/
 - Additionally, only these root files may be modified: go.mod, go.sum, main.go, README.md, .gitignore
 - Do not modify any other paths/files.
+- Be extremely careful with shell commands executed on this PC.
+- Never run destructive commands (e.g. rm -rf, git reset --hard, git clean -fd, force-push, or anything that can delete/overwrite data).
 - Keep the response concise and specific to the comment.
 EOF
 
