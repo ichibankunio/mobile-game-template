@@ -68,6 +68,17 @@ LABEL=autocodex POLL_INTERVAL=60 ./scripts/issue_worker.sh
 - Worker state/logs are saved under `.codex-worker/`.
 - Before scanning each next issue, worker guarantees checkout/update of `main` (or waits if worktree is dirty).
 
+### PR comment worker (optional)
+
+```bash
+POLL_INTERVAL=60 TRIGGER_PREFIX=@codex ./scripts/pr_worker.sh
+```
+
+- Watches open PR comments and review comments.
+- Reacts only to comments starting with `@codex`.
+- `@codex reply ...` -> reply only, no code changes.
+- `@codex ...` -> may edit PR branch, commit, push, and comment back.
+
 ### macOS launchd (optional)
 
 1. Copy `scripts/launchd/com.ichibankunio.mobile-game-template.issue-worker.plist`
