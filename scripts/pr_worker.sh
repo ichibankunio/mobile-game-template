@@ -8,6 +8,14 @@ for cmd in gh codex git jq base64; do
   fi
 done
 
+decode_base64() {
+  if base64 --decode >/dev/null 2>&1 <<<""; then
+    base64 --decode
+  else
+    base64 -D
+  fi
+}
+
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 REPO="${REPO:-$(gh repo view --json nameWithOwner --jq .nameWithOwner)}"
 POLL_INTERVAL="${POLL_INTERVAL:-60}"
@@ -142,7 +150,7 @@ while true; do
     )
 
     for row in "${comment_rows[@]}"; do
-      json="$(printf '%s' "${row}" | base64 --decode)"
+      json="$(printf '%s' "${row}" | decode_base64)"
       comment_id="$(printf '%s' "${json}" | jq -r '.id')"
       [[ -f "${PROCESSED_DIR}/${comment_id}.done" ]] && continue
 
