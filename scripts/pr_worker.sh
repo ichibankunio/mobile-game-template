@@ -127,6 +127,8 @@ EOF
 echo "starting pr worker for ${REPO} (prefix=${TRIGGER_PREFIX}, interval=${POLL_INTERVAL}s)"
 
 while true; do
+  handled_any=false
+
   if ! ensure_main_ready; then
     sleep "${POLL_INTERVAL}"
     continue
@@ -152,6 +154,7 @@ while true; do
       fi
 
       echo "processing PR #${pr_number} comment #${comment_id} (${mode})"
+      handled_any=true
       if run_codex_for_comment "${pr_number}" "${comment_id}" "${comment_url}" "${comment_body}" "${head_branch}" "${mode}"; then
         touch "${PROCESSED_DIR}/${comment_id}.done"
       else
@@ -170,6 +173,9 @@ while true; do
       '
     )
   done < <(gh pr list --repo "${REPO}" --state open --limit 100 --json number --jq '.[].number')
+  if [[ "${handled_any}" != "true" ]]; then
+    echo "poll: no new @codex PR comments"
+  fi
 
   sleep "${POLL_INTERVAL}"
 done

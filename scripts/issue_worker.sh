@@ -31,6 +31,8 @@ trap cleanup EXIT
 echo "starting issue worker for ${REPO} (label=${LABEL}, interval=${POLL_INTERVAL}s)"
 
 while true; do
+  handled_any=false
+
   # Always stay on main before scanning the next issue.
   if [[ -n "$(git status --porcelain)" ]]; then
     echo "worktree is dirty; skip polling until clean." >&2
@@ -64,6 +66,7 @@ while true; do
     done)"
 
   if [[ -n "${NEXT_ISSUE}" ]]; then
+    handled_any=true
     LOG_FILE="${LOG_DIR}/issue-${NEXT_ISSUE}-$(date +%Y%m%d%H%M%S).log"
     echo "processing issue #${NEXT_ISSUE}"
     if "${RUN_ISSUE_SCRIPT}" "${NEXT_ISSUE}" >"${LOG_FILE}" 2>&1; then
@@ -76,6 +79,9 @@ while true; do
         git checkout main >/dev/null 2>&1 || true
       fi
     fi
+  fi
+  if [[ "${handled_any}" != "true" ]]; then
+    echo "poll: no new autocodex issues"
   fi
 
   sleep "${POLL_INTERVAL}"

@@ -79,6 +79,15 @@ POLL_INTERVAL=60 TRIGGER_PREFIX=@codex ./scripts/pr_worker.sh
 - `@codex reply ...` -> reply only, no code changes.
 - `@codex ...` -> may edit PR branch, commit, push, and comment back.
 
+### Start both workers together
+
+```bash
+./scripts/start_workers.sh
+```
+
+- Starts both `issue_worker` and `pr_worker` in one command.
+- Stop both workers with `Ctrl+C`.
+
 ### macOS launchd (optional)
 
 1. Copy `scripts/launchd/com.ichibankunio.mobile-game-template.issue-worker.plist`
