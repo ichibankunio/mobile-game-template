@@ -109,6 +109,8 @@ LABEL=autocodex POLL_INTERVAL=60 ./scripts/issue_worker.sh
 - Before scanning each next issue, worker guarantees checkout/update of `main` (or waits if worktree is dirty).
 - If clarification is needed before implementation, worker posts a question on the issue and waits.
 - After you reply on the issue, worker resumes and continues implementation.
+- `issue_worker` and `pr_worker` share a worktree lock, so only one worker performs git mutations at a time.
+- Worker console logs are prefixed with `[issue_worker]` or `[pr_worker]`.
 
 ### PR comment worker (optional)
 
