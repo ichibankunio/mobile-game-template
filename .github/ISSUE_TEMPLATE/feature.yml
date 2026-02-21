@@ -5,11 +5,11 @@ labels:
   - feature
 body:
   - type: textarea
-    id: objective
+    id: request
     attributes:
-      label: 目的
-      description: 何を実現したいかを1-3行で書いてください。
-      placeholder: 例) 画面タップでジャンプできるようにする
+      label: リクエスト
+      description: やりたい変更を自由に書いてください。
+      placeholder: 例) 背景色を目に優しい色に変えて
     validations:
       required: true
 
@@ -17,20 +17,20 @@ body:
     id: acceptance
     attributes:
       label: 受け入れ条件
-      description: 確認可能な条件を箇条書きで書いてください。
-      placeholder: |
-        - タップでジャンプする
-        - 二段ジャンプしない
-        - ゲームオーバー中はジャンプしない
+      description: 必要なら編集してください（そのまま送信してもOK）。
+      value: |
+        - （必要ならここを編集）
+        - 背景色が変わっていること
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: out_of_scope
     attributes:
       label: 非対象
-      description: 今回やらないことを書いてください。
-      placeholder: 例) 効果音追加、エフェクト追加は今回対象外
+      description: 必要なら編集してください（そのまま送信してもOK）。
+      value: |
+        - なし
     validations:
       required: false
 
@@ -38,10 +38,9 @@ body:
     id: verify_steps
     attributes:
       label: 確認手順
-      description: レビュアーが再現できる手順を書いてください。
-      placeholder: |
-        1. PagesプレビューURLを開く
-        2. 画面をタップする
-        3. 期待した挙動を確認する
+      description: 必要なら編集してください（そのまま送信してもOK）。
+      value: |
+        1. PRのPreview URLを開く
+        2. 変更内容を確認する
     validations:
-      required: true
+      required: false

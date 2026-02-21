@@ -44,6 +44,7 @@ fi
 RAW_TITLE="$(gh issue view "${ISSUE_NUMBER}" --repo "${REPO}" --json title --jq .title)"
 RAW_BODY="$(gh issue view "${ISSUE_NUMBER}" --repo "${REPO}" --json body --jq .body)"
 ISSUE_URL="$(gh issue view "${ISSUE_NUMBER}" --repo "${REPO}" --json url --jq .url)"
+PR_TITLE="${RAW_TITLE}"
 
 git fetch origin "${BASE_BRANCH}"
 git checkout "${BASE_BRANCH}"
@@ -95,7 +96,7 @@ PR_URL="$(gh pr create \
   --repo "${REPO}" \
   --base "${BASE_BRANCH}" \
   --head "${BRANCH}" \
-  --title "Codex: resolve issue #${ISSUE_NUMBER}" \
+  --title "${PR_TITLE}" \
   --body "${PR_BODY}")"
 
 gh issue comment "${ISSUE_NUMBER}" --repo "${REPO}" --body "Codex started and opened a PR: ${PR_URL}"
