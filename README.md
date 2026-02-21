@@ -7,6 +7,7 @@
 - 画像ロード: `game/assets/images`
 - フォントロード: `game/assets/fonts`
 - `text/v2` の `GoTextFace` で `Hello codex` 表示
+- 画面下部テキストに `hello codex!!!` 表示
 - SE/BGMロード: `game/assets/se`, `game/assets/bgm`
 - JSONロード: `game/assets/data`
 
