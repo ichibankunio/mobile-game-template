@@ -101,3 +101,7 @@ PR_URL="$(gh pr create \
 
 gh issue comment "${ISSUE_NUMBER}" --repo "${REPO}" --body "Codex started and opened a PR: ${PR_URL}"
 echo "created PR: ${PR_URL}"
+
+# Return to base branch so the worker is ready for the next issue.
+git checkout "${BASE_BRANCH}"
+git pull --ff-only origin "${BASE_BRANCH}"

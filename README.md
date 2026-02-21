@@ -66,6 +66,7 @@ LABEL=autocodex POLL_INTERVAL=60 ./scripts/issue_worker.sh
 - Only open issues with label `autocodex` are picked up.
 - Worker creates `codex/issue-<number>` branch, commits, pushes, and opens a PR.
 - Worker state/logs are saved under `.codex-worker/`.
+- Before scanning each next issue, worker guarantees checkout/update of `main` (or waits if worktree is dirty).
 
 ### macOS launchd (optional)
 

@@ -31,6 +31,25 @@ trap cleanup EXIT
 echo "starting issue worker for ${REPO} (label=${LABEL}, interval=${POLL_INTERVAL}s)"
 
 while true; do
+  # Always stay on main before scanning the next issue.
+  if [[ -n "$(git status --porcelain)" ]]; then
+    echo "worktree is dirty; skip polling until clean." >&2
+    sleep "${POLL_INTERVAL}"
+    continue
+  fi
+  if [[ "$(git branch --show-current)" != "main" ]]; then
+    if ! git checkout main >/dev/null 2>&1; then
+      echo "failed to checkout main; retry later." >&2
+      sleep "${POLL_INTERVAL}"
+      continue
+    fi
+  fi
+  if ! git pull --ff-only origin main >/dev/null 2>&1; then
+    echo "failed to update main; retry later." >&2
+    sleep "${POLL_INTERVAL}"
+    continue
+  fi
+
   NEXT_ISSUE="$(gh issue list \
     --repo "${REPO}" \
     --state open \
@@ -52,6 +71,10 @@ while true; do
       echo "issue #${NEXT_ISSUE} completed"
     else
       echo "issue #${NEXT_ISSUE} failed. see ${LOG_FILE}" >&2
+      # Best-effort return to main after failure.
+      if [[ -z "$(git status --porcelain)" ]]; then
+        git checkout main >/dev/null 2>&1 || true
+      fi
     fi
   fi
 
