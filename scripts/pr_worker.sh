@@ -132,24 +132,12 @@ while true; do
     continue
   fi
 
-  mapfile -t pr_numbers < <(gh pr list --repo "${REPO}" --state open --limit 100 --json number --jq '.[].number')
-  for pr_number in "${pr_numbers[@]}"; do
+  while IFS= read -r pr_number; do
+    [[ -z "${pr_number}" ]] && continue
     head_branch="$(gh pr view "${pr_number}" --repo "${REPO}" --json headRefName --jq .headRefName)"
 
-    mapfile -t comment_rows < <(
-      {
-        gh api "repos/${REPO}/issues/${pr_number}/comments?per_page=100"
-        gh api "repos/${REPO}/pulls/${pr_number}/comments?per_page=100"
-      } | jq -cr --arg pfx "${TRIGGER_PREFIX}" '
-        .[]?
-        | select(.user.login != "github-actions[bot]")
-        | select((.body // "") | startswith($pfx))
-        | {id, html_url, body}
-        | @base64
-      '
-    )
-
-    for row in "${comment_rows[@]}"; do
+    while IFS= read -r row; do
+      [[ -z "${row}" ]] && continue
       json="$(printf '%s' "${row}" | decode_base64)"
       comment_id="$(printf '%s' "${json}" | jq -r '.id')"
       [[ -f "${PROCESSED_DIR}/${comment_id}.done" ]] && continue
@@ -169,8 +157,19 @@ while true; do
       else
         echo "failed PR #${pr_number} comment #${comment_id}" >&2
       fi
-    done
-  done
+    done < <(
+      {
+        gh api "repos/${REPO}/issues/${pr_number}/comments?per_page=100"
+        gh api "repos/${REPO}/pulls/${pr_number}/comments?per_page=100"
+      } | jq -cr --arg pfx "${TRIGGER_PREFIX}" '
+        .[]?
+        | select(.user.login != "github-actions[bot]")
+        | select((.body // "") | startswith($pfx))
+        | {id, html_url, body}
+        | @base64
+      '
+    )
+  done < <(gh pr list --repo "${REPO}" --state open --limit 100 --json number --jq '.[].number')
 
   sleep "${POLL_INTERVAL}"
 done
