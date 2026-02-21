@@ -11,6 +11,10 @@ if ! command -v gh >/dev/null 2>&1; then
   echo "gh command is required." >&2
   exit 1
 fi
+if ! command -v jq >/dev/null 2>&1; then
+  echo "jq command is required." >&2
+  exit 1
+fi
 if ! command -v codex >/dev/null 2>&1; then
   echo "codex command is required." >&2
   exit 1
@@ -26,6 +30,11 @@ BRANCH="codex/issue-${ISSUE_NUMBER}"
 TMP_DIR="$(mktemp -d)"
 PROMPT_FILE="${TMP_DIR}/prompt.txt"
 RESPONSE_FILE="${TMP_DIR}/response.txt"
+PLAN_PROMPT_FILE="${TMP_DIR}/plan_prompt.txt"
+PLAN_RESPONSE_FILE="${TMP_DIR}/plan_response.txt"
+STATE_DIR="${STATE_DIR:-$(pwd)/.codex-worker}"
+QUESTION_STATE_DIR="${STATE_DIR}/issue-questions"
+QUESTION_STATE_FILE="${QUESTION_STATE_DIR}/${ISSUE_NUMBER}.json"
 
 cleanup() {
   rm -rf "${TMP_DIR}"
@@ -42,10 +51,76 @@ if gh pr list --repo "${REPO}" --state open --head "${BRANCH}" --json number --j
   exit 0
 fi
 
+mkdir -p "${QUESTION_STATE_DIR}"
+
 RAW_TITLE="$(gh issue view "${ISSUE_NUMBER}" --repo "${REPO}" --json title --jq .title)"
 RAW_BODY="$(gh issue view "${ISSUE_NUMBER}" --repo "${REPO}" --json body --jq .body)"
 ISSUE_URL="$(gh issue view "${ISSUE_NUMBER}" --repo "${REPO}" --json url --jq .url)"
 PR_TITLE="${RAW_TITLE}"
+ACTOR_LOGIN="$(gh api user --jq .login)"
+ANSWER_CONTEXT=""
+
+if [[ -f "${QUESTION_STATE_FILE}" ]]; then
+  ASKED_AT="$(jq -r '.asked_at' "${QUESTION_STATE_FILE}")"
+  ANSWER_JSON="$(
+    gh api "repos/${REPO}/issues/${ISSUE_NUMBER}/comments?per_page=100" \
+      | jq -cr --arg asked_at "${ASKED_AT}" --arg actor "${ACTOR_LOGIN}" '
+          map(
+            select(.created_at > $asked_at)
+            | select(.user.login != $actor)
+          )
+          | last // empty
+        '
+  )"
+  if [[ -z "${ANSWER_JSON}" ]]; then
+    echo "waiting for reviewer response on issue #${ISSUE_NUMBER}"
+    exit 20
+  fi
+  ANSWER_CONTEXT="$(printf '%s' "${ANSWER_JSON}" | jq -r '.body')"
+  rm -f "${QUESTION_STATE_FILE}"
+fi
+
+cat > "${PLAN_PROMPT_FILE}" <<EOF
+You are preparing implementation for GitHub Issue #${ISSUE_NUMBER} in ${REPO}.
+
+Issue title:
+${RAW_TITLE}
+
+Issue body:
+${RAW_BODY}
+
+Latest reviewer answer on this issue (if any):
+${ANSWER_CONTEXT}
+
+If the issue is clear enough, output exactly:
+READY_TO_IMPLEMENT
+
+If you need clarification before implementation, output exactly:
+QUESTION_FOR_ISSUE: <question>
+
+Do not output anything else.
+EOF
+
+codex exec --full-auto -C "$(pwd)" -o "${PLAN_RESPONSE_FILE}" - < "${PLAN_PROMPT_FILE}"
+
+QUESTION_TEXT="$(sed -n 's/^QUESTION_FOR_ISSUE:[[:space:]]*//p' "${PLAN_RESPONSE_FILE}" | head -n 1)"
+if [[ -n "${QUESTION_TEXT}" ]]; then
+  QUESTION_COMMENT_BODY="$(cat <<EOF
+Codex question before implementation:
+
+${QUESTION_TEXT}
+
+Please reply on this issue. Worker will resume after your answer.
+EOF
+)"
+  QUESTION_COMMENT_JSON="$(
+    jq -n --arg body "${QUESTION_COMMENT_BODY}" '{body: $body}' \
+      | gh api "repos/${REPO}/issues/${ISSUE_NUMBER}/comments" --input -
+  )"
+  printf '%s' "${QUESTION_COMMENT_JSON}" | jq '{asked_at: .created_at, question: .body}' > "${QUESTION_STATE_FILE}"
+  echo "asked clarification question for issue #${ISSUE_NUMBER}; waiting for response"
+  exit 20
+fi
 
 git fetch origin "${BASE_BRANCH}"
 git checkout "${BASE_BRANCH}"
@@ -61,6 +136,9 @@ ${RAW_TITLE}
 
 Issue body:
 ${RAW_BODY}
+
+Latest reviewer answer on issue (if any):
+${ANSWER_CONTEXT}
 
 Requirements:
 - Implement only what is necessary to satisfy this issue.

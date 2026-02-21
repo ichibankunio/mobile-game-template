@@ -73,10 +73,15 @@ while true; do
       touch "${PROCESSED_DIR}/${NEXT_ISSUE}.done"
       echo "issue #${NEXT_ISSUE} completed"
     else
-      echo "issue #${NEXT_ISSUE} failed. see ${LOG_FILE}" >&2
-      # Best-effort return to main after failure.
-      if [[ -z "$(git status --porcelain)" ]]; then
-        git checkout main >/dev/null 2>&1 || true
+      run_status=$?
+      if [[ "${run_status}" -eq 20 ]]; then
+        echo "issue #${NEXT_ISSUE} waiting for reviewer response"
+      else
+        echo "issue #${NEXT_ISSUE} failed. see ${LOG_FILE}" >&2
+        # Best-effort return to main after failure.
+        if [[ -z "$(git status --porcelain)" ]]; then
+          git checkout main >/dev/null 2>&1 || true
+        fi
       fi
     fi
   fi

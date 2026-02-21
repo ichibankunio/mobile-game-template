@@ -68,6 +68,8 @@ LABEL=autocodex POLL_INTERVAL=60 ./scripts/issue_worker.sh
 - Worker creates `codex/issue-<number>` branch, commits, pushes, and opens a PR.
 - Worker state/logs are saved under `.codex-worker/`.
 - Before scanning each next issue, worker guarantees checkout/update of `main` (or waits if worktree is dirty).
+- If clarification is needed before implementation, worker posts a question on the issue and waits.
+- After you reply on the issue, worker resumes and continues implementation.
 
 ### PR comment worker (optional)
 
