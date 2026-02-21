@@ -60,7 +60,7 @@ func (s *MainScene) Draw(screen *ebiten.Image) {
 	if s.font != nil {
 		op := &text.DrawOptions{}
 		op.GeoM.Translate(40, 610)
-		text.Draw(screen, "text/v2 GoTextFace loaded", s.font, op)
+		text.Draw(screen, "Hello World", s.font, op)
 	}
 }
 
