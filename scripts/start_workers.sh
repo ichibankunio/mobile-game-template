@@ -29,5 +29,14 @@ echo "  issue_worker pid=${ISSUE_PID} label=${ISSUE_LABEL} interval=${ISSUE_POLL
 echo "  pr_worker    pid=${PR_PID} prefix=${TRIGGER_PREFIX} interval=${PR_POLL_INTERVAL}s"
 echo "press Ctrl+C to stop both."
 
-wait -n "${ISSUE_PID}" "${PR_PID}"
-echo "one worker exited; shutting down both."
+while true; do
+  if ! kill -0 "${ISSUE_PID}" >/dev/null 2>&1; then
+    echo "issue worker exited; shutting down both."
+    break
+  fi
+  if ! kill -0 "${PR_PID}" >/dev/null 2>&1; then
+    echo "pr worker exited; shutting down both."
+    break
+  fi
+  sleep 1
+done
