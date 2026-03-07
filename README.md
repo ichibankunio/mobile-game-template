@@ -137,6 +137,98 @@ POLL_INTERVAL=60 TRIGGER_PREFIX=@codex ./scripts/pr_worker.sh
 - Starts both `issue_worker` and `pr_worker` in one command.
 - Stop both workers with `Ctrl+C`.
 
+## Discord ChatOps Worker (MVP)
+
+Discord から `/run` などの Slash Command を実行し、ローカルの Codex CLI で開発ジョブを処理します。
+
+### Commands
+
+- `/start`:
+  - モバイル向けメニュー（ボタン）を表示
+  - `New Run / Improve / Merge / Discard / Status / Logs` を選択
+- `/run repo:<owner/repo> task:<text>`:
+  - 専用スレッドを作成して、そのスレッド内で実行/結果通知
+  - `task/<timestamp>-<jobid>` ブランチを作成
+  - Codex 実行 -> test/build -> commit/push
+  - preview deploy コマンド（設定時）を実行
+  - 完了メッセージを Discord に返信
+- `/run` (引数なし):
+  - repo をセレクト
+  - task をモーダル入力
+- `/improve repo:<owner/repo> branch:task/... task:<text>`:
+  - 専用スレッドを作成して、そのスレッド内で実行/結果通知
+  - 既存 `task/...` ブランチに追加修正を実施して追いコミット
+- `/improve` (引数なし):
+  - branch をセレクト
+  - task をモーダル入力
+- `/status [job_id]`: キューとジョブ状態を表示
+- `/logs job_id:<id> [lines]`: ログ末尾を表示
+- `/preview branch:task/...`: URLテンプレートからプレビューURLを生成
+- `/merge branch:task/...`: `main` へマージして push
+- `/discard branch:task/...`: そのブランチでの作業を中止し、`main` へ戻る（必要なら remote も削除）
+- `/merge` / `/discard`:
+  - branch 未指定時はセレクト
+  - 実行前に確認ボタン（Confirm/Cancel）
+
+### Thread UX
+
+- `/run` 1件ごとに専用スレッドを作成
+- 完了メッセージにクイックボタン:
+  - `Improve`, `Merge`, `Discard`, `Logs`, `Open Preview`
+- スレッド内で Bot をメンションして要望を書くだけで追加改修をキュー可能
+  - 例: `@mmgde-bot コインをもう少し明るく`
+
+### Status Updates
+
+- 1ジョブ1つのステータスメッセージを更新
+  - `queued -> running -> sync/codex/test/build/push/deploy -> done/failed`
+
+### Failure Recovery
+
+- 失敗時に次アクションボタンを表示
+  - `Retry`, `Logs`, `Discard`
+
+### Codex Question Flow
+
+- Codex が実装前に判断が必要なとき、出力に `QUESTION_FOR_USER: ...` を返す
+- worker は commit/push/deploy を実行せず `waiting_input` で停止
+- スレッドに `Answer` ボタンを表示
+- ユーザー回答後、その回答を含めて同スレッドでジョブを再開
+
+### Setup
+
+1. Environment file:
+
+```bash
+cp scripts/discord_worker.env.example scripts/discord_worker.env
+```
+
+2. Edit `scripts/discord_worker.env`:
+   - `DISCORD_BOT_TOKEN`
+   - `DISCORD_APP_ID`
+   - `DISCORD_GUILD_ID` (recommended)
+   - `CHATOPS_ALLOWED_REPOS` (whitelist)
+   - `CHATOPS_WORKDIR`
+   - optionally `CHATOPS_PREVIEW_CMD`
+   - optionally `CHATOPS_PREVIEW_URL_TEMPLATE`
+   - if using this public repo as Pages host for private builds:
+     - `CHATOPS_PREVIEW_CMD="/abs/path/mobile-game-template/scripts/deploy_preview_to_pages.sh"`
+     - `CHATOPS_PUBLIC_REPO_DIR="/abs/path/mobile-game-template"`
+
+3. Start worker:
+
+```bash
+./scripts/start_discord_worker.sh
+```
+
+### Notes
+
+- 実際の Git/Codex/build/deploy 処理は `scripts/chatops_run_task.sh` と `scripts/chatops_merge_branch.sh` が担当します。
+- `/discard` の実処理は `scripts/chatops_discard_branch.sh` が担当します。
+- ワーカー状態とログは `.codex-worker/chatops/` に保存されます。
+- `main` 直書きは `/merge` のみで実行される設計です。
+- `scripts/deploy_preview_to_pages.sh` は `CHATOPS_WORKDIR`(private repo) の `docs/` をこの public repo の `docs/previews/<branch>/` に同期し、GitHub Pages URLを返します。
+
 ### macOS launchd (optional)
 
 1. Copy `scripts/launchd/com.ichibankunio.mobile-game-template.issue-worker.plist`

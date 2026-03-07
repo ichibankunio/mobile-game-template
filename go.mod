@@ -3,6 +3,7 @@ module github.com/ichibankunio/mobile-game-template
 go 1.24.0
 
 require (
+	github.com/bwmarrin/discordgo v0.28.1
 	github.com/hajimehoshi/ebiten/v2 v2.9.8
 	github.com/ichibankunio/flib v1.2.1
 )
@@ -14,10 +15,12 @@ require (
 	github.com/ebitengine/purego v0.9.0 // indirect
 	github.com/go-text/typesetting v0.3.0 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hajimehoshi/go-mp3 v0.3.4 // indirect
 	github.com/ichibankunio/fvec v0.2.0 // indirect
 	github.com/jezek/xgb v1.1.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
+	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b // indirect
 	golang.org/x/image v0.31.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
